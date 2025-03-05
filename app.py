@@ -1,5 +1,5 @@
 # Import the dependencies.
-from flask import Flask
+from flask import Flask , jsonify
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
@@ -39,18 +39,38 @@ def home():
     return (
         f"Welcome to the Hawaii Flask API!<br/>"
         f"Available Routes:<br/>"
-        f"/api/v1.0/<br/>"
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0/<start><br/>"
-        f"/api/v1.0/<start>/<end>"
+        f"/api/v1.0/2016-08-23<br/>"
+        f"/api/v1.0/2016-08-23/2017-08-23"
     )
 
 
+@app.route("/api/v1.0/precipitation")
+def precipitation():
+    return 'this is a test'
 
+@app.route("/api/v1.0/stations")
+def stations():
 
+    stationsquery = session.query(Station.station).all()
+    stationdict = {}
+    for idx , station in enumerate(stationsquery):
+        stationdict[f"Station {idx}"] = station[0]
+    
+    return jsonify(stationdict)
 
+@app.route("/api/v1.0/tobs")
+def tobs():
+    Q = [Measurement.date , Measurement.tobs]
+    dto = session.query(*Q).filter(Measurement.date >= '2016-08-23').filter(Measurement.station == 'USC00519281').all()
+    dtodict = {}
+    for row in dto:
+        (date , tobs) = row
+        dtodict[date] = tobs
+    
+    return jsonify(dtodict)
 
 if __name__ == "__main__":
     app.run(debug=True)
