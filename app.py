@@ -49,7 +49,16 @@ def home():
 
 @app.route("/api/v1.0/precipitation")
 def precipitation():
-    return 'this is a test'
+    sel = [Measurement.date , Measurement.prcp]
+    query = session.query(*sel).filter(Measurement.date >= '2016-08-23').all()
+    retdict = {}
+    for row in query:
+        
+        (date , prcp) = row
+        if prcp != None:
+            retdict[date] = prcp
+
+    return jsonify(retdict)
 
 @app.route("/api/v1.0/stations")
 def stations():
@@ -71,6 +80,33 @@ def tobs():
         dtodict[date] = tobs
     
     return jsonify(dtodict)
+
+
+
+
+@app.route("/api/v1.0/<start>")
+def tempcalc(start):
+    T = [func.min(Measurement.tobs),func.avg(Measurement.tobs),func.max(Measurement.tobs)]
+    tempquery = session.query(*T).filter(Measurement.date >= start).all()
+    tempdict = {}
+    (tmin , tavg , tmax) = tempquery[0]
+    tempdict["TMIN"] = tmin
+    tempdict["TAVG"] = tavg
+    tempdict["TMAX"] = tmax
+
+    return jsonify(tempdict)
+
+@app.route("/api/v1.0/<start>/<end>")
+def tempcalc2(start,end):
+    T2 = [func.min(Measurement.tobs),func.avg(Measurement.tobs),func.max(Measurement.tobs)]
+    temp2query = session.query(*T2).filter(Measurement.date >= start).filter(Measurement.date <= end).all()
+    temp2dict = {}
+    (t2min , t2avg , t2max) = temp2query[0]
+    temp2dict["TMIN"] = t2min
+    temp2dict["TAVG"] = t2avg
+    temp2dict["TMAX"] = t2max
+
+    return jsonify(temp2dict)
 
 if __name__ == "__main__":
     app.run(debug=True)
